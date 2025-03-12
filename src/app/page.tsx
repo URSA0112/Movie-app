@@ -1,11 +1,15 @@
 'use client'
 
 import { useEffect, useState } from "react";
-import { ACCESS_TOKEN, BASE_URL } from "./constants";
+import { ACCESS_TOKEN, BASE_URL, BASE_IMAGE_URL } from "./constants";
 import axios from "axios";
-import { log } from "console";
 
-type Movie = {
+import { UpcomingMovies } from "./components/upcoming";
+import { Header } from "./components/header";
+import { NowPlaying } from "./components/bigScreen";
+
+
+export type Movie = {
   adult: boolean;
   backdrop_path: string;
   genre_ids: number[];
@@ -22,26 +26,46 @@ type Movie = {
   vote_count: number;
 };
 
+
 export default function Home() {
   const [upComingMovies, setUpComingMovies] = useState<Movie[]>([]);
+  const [nowPlaying, setNowPlaying] = useState<Movie[]>([])
 
+    useEffect(() => {
+  // Now PLaying
+  const options = {
+    method: 'GET',
+    url: 'https://api.themoviedb.org/3/movie/now_playing',
+    params: {language: 'en-US', page: '1'},
+    headers: {
+      accept: 'application/json',
+      Authorization: `Bearer ${ACCESS_TOKEN}`
+    }
+  };
+  
+  axios
+    .request(options)
+    .then(res => ( setNowPlaying(res.data.results)))
+    .catch(err => console.error(err));
+
+    }, [])
+
+  // UPCOMING MOVIES--
   useEffect(() => {
     let isMounted = true;
-
     const getMovies = async () => {
       try {
         const res = await axios.get(`${BASE_URL}/movie/upcoming`, {
           params: { language: "en-US", page: "1" },
           headers: {
             accept: "application/json",
-            Authorization: `Bearer ${ACCESS_TOKEN}`,
+            Authorization: `Bearer ${ACCESS_TOKEN}`
+  
           },
         });
-
         if (isMounted) {
           setUpComingMovies(res.data.results)
         }
-
       } catch (error) {
         console.error("Error fetching movies:", error);
       }
@@ -51,10 +75,11 @@ export default function Home() {
   }, []);
 
 
-  
   return (
     <div>
-
+      <Header></Header>
+      <NowPlaying nowPlaying={nowPlaying}></NowPlaying>
+      <UpcomingMovies upComingMovies={upComingMovies}></UpcomingMovies>
     </div>
   );
 }
