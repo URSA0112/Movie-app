@@ -45,7 +45,7 @@ export default function Home() {
   
   axios
     .request(options)
-    .then(res => ( setNowPlaying(res.data.results)))
+    .then(res => setNowPlaying(res.data.results))
     .catch(err => console.error(err));
 
     }, [])
@@ -64,6 +64,7 @@ export default function Home() {
           },
         });
         if (isMounted) {
+          console.log(res.data)
           setUpComingMovies(res.data.results)
         }
       } catch (error) {
