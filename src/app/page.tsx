@@ -30,6 +30,7 @@ export type Movie = {
 export default function Home() {
   const [upComingMovies, setUpComingMovies] = useState<Movie[]>([]);
   const [nowPlaying, setNowPlaying] = useState<Movie[]>([])
+  const [selectedGenre, setSelectedGenre] = useState<{ id: number; name: string } | null>(null)
 
     useEffect(() => {
   // Now PLaying
@@ -64,7 +65,7 @@ export default function Home() {
           },
         });
         if (isMounted) {
-          console.log(res.data)
+          // console.log(res.data)
           setUpComingMovies(res.data.results)
         }
       } catch (error) {
@@ -76,9 +77,10 @@ export default function Home() {
   }, []);
 
 
+
   return (
     <div>
-      <Header></Header>
+      <Header selectedGenre={selectedGenre} setSelectedGenre={setSelectedGenre} ></Header>
       <NowPlaying nowPlaying={nowPlaying}></NowPlaying>
       <UpcomingMovies upComingMovies={upComingMovies}></UpcomingMovies>
     </div>

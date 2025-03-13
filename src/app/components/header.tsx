@@ -1,25 +1,50 @@
-import { useState } from "react";
+'use client'
+import { useState, useEffect } from "react";
+import axios from "axios";
 import { Sun, Moon, Search, ChevronDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
+import { ACCESS_TOKEN } from "../constants";
+import { stringify } from "querystring";
 
-const genres = [
-  { label: "Action", value: "action" },
-  { label: "Comedy", value: "comedy" },
-  { label: "Drama", value: "drama" },
-  { label: "Horror", value: "horror" },
-];
-
-export function Header() {
+export function Header({ selectedGenre, setSelectedGenre }: { selectedGenre: { id: number; name: string } | null; setSelectedGenre: (genre: { id: number; name: string }) => void }) {
+  
   const [darkMode, setDarkMode] = useState(false);
-  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
+  const [genre, setGenre] = useState<MovieGenreType[]>([])
+
+
+  type MovieGenreType = {
+    id: number,
+    name: string
+  }
+
+  useEffect(() => {
+    const options = {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        Authorization: `Bearer ${ACCESS_TOKEN}`
+      }
+    };
+
+    const getjanar = async () => {
+      const res = await axios.get('https://api.themoviedb.org/3/genre/movie/list', options)
+      setGenre(res.data.genres)
+    }
+    getjanar()
+  }, [])
+
+  
+  const HandleClickGenre = (genre: { id: number; name: string }) => {
+    setSelectedGenre(genre);
+  };
 
   return (
     <header className="w-full bg-white dark:bg-gray-900 shadow-md p-4" >
       <div className="container mx-auto flex  md:flex-row justify-between items-center gap-4 md:gap-0">
-        
+
         {/* 1️⃣ Лого */}
         <img
           src="logo.png"
@@ -33,21 +58,20 @@ export function Header() {
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-full md:w-[200px] flex justify-between">
-                {selectedGenre ? genres.find((g) => g.value === selectedGenre)?.label : "Choose Genre"}
+                {selectedGenre? genre.find((g) => g.name === selectedGenre.name)?.name : "Choose Genre"}
                 <ChevronDown className="h-4 w-4 ml-2" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-full md:w-[200px] p-0">
               <Command>
                 <CommandGroup>
-                  {genres.map((genre) => (
-                    <CommandItem
-                      key={genre.value}
-                      onClick={() => setSelectedGenre(genre.value)}
-                      className="flex justify-between"
-                    >
-                      {genre.label}
-                      {selectedGenre === genre.value && <Check className="h-4 w-4 text-green-500" />}
+                  {genre.map((genre) => (
+                    <CommandItem key={genre.id} className="flex justify-between">
+                      <div onClick={() => HandleClickGenre(genre)} className="w-full cursor-pointer">
+                        {genre.name}
+                        {selectedGenre?.id === genre.id &&
+                          <Check className="h-4 w-4 text-green-500" />}
+                      </div>
                     </CommandItem>
                   ))}
                 </CommandGroup>
