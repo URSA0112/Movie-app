@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ACCESS_TOKEN, BASE_URL, BASE_IMAGE_URL, API_KEY } from "./constants";
 import axios from "axios";
 
@@ -33,14 +33,16 @@ export default function Home() {
   const [nowPlaying, setNowPlaying] = useState<Movie[]>([])
   const [selectedGenre, setSelectedGenre] = useState<{ id: number; name: string } | null>(null)
   const [selectedMoviesList, setSelectedMoviesList] = useState<Movie[]>([])
-
+  const [searchValue, setSearchValue] = useState<string>("")
+  const [searchedMovieListInput, setSearchedMovieListInput] = useState<Movie[]>([])
+  const [currentPageNumber, setCurrentPageNumber] = useState(1)
 
   useEffect(() => {
     // Now PLaying
     const options = {
       method: 'GET',
-      url: 'https://api.themoviedb.org/3/movie/now_playing',
-      params: { language: 'en-US', page: '1' },
+      url: `${BASE_URL}/movie/now_playing`,
+      params: { language: 'en-US', page: currentPageNumber },
       headers: {
         accept: 'application/json',
         Authorization: `Bearer ${ACCESS_TOKEN}`
@@ -51,16 +53,15 @@ export default function Home() {
       .request(options)
       .then(res => setNowPlaying(res.data.results))
       .catch(err => console.error(err));
-
   }, [])
 
-  // UPCOMING MOVIES--
+  //UPCOMING FETCH
   useEffect(() => {
     let isMounted = true;
     const getMovies = async () => {
       try {
         const res = await axios.get(`${BASE_URL}/movie/upcoming`, {
-          params: { language: "en-US", page: "1" },
+          params: { language: "en-US", page: currentPageNumber },
           headers: {
             accept: "application/json",
             Authorization: `Bearer ${ACCESS_TOKEN}`
@@ -77,8 +78,9 @@ export default function Home() {
     };
     getMovies();
     return () => { isMounted = false; };
-  }, []);
+  }, [currentPageNumber]);
 
+  //GENRE FETCH
   useEffect(() => {
     const getMovieByGenre = async () => {
       if (!selectedGenre) return;
@@ -89,14 +91,53 @@ export default function Home() {
     }
     getMovieByGenre()
   }, [selectedGenre])
-  {/* <UpcomingMovies upComingMovies={upComingMovies} selectedGenre={selectedGenre}></UpcomingMovies>
-      <SelectedMovies></SelectedMovies> */}
+  
+  //SEARCH FETCH
+  useEffect(() => {
+    const getMovieBySearch = async () => {
+      if (!searchValue) return;
+      const res = await axios.get(`${BASE_URL}/search/movie?query=${searchValue}&api_key=${API_KEY}`)
+      const searchedMovies = res.data.results
+      setSearchedMovieListInput(searchedMovies)
+
+    }
+    getMovieBySearch()
+  }, [searchValue])
+
+  const HandlePrevButton = () => setCurrentPageNumber((prev) => Math.max(1, prev - 1));
+  const HandleNextButton = () => setCurrentPageNumber((prev) => prev + 1);
   return (
-    <div>
-      <Header selectedGenre={selectedGenre} setSelectedGenre={setSelectedGenre} ></Header>
+    <div className="">
+
+      <Header
+        selectedGenre={selectedGenre}
+        setSelectedGenre={setSelectedGenre}
+        searchValue={searchValue}
+        setSearchValue={setSearchValue} ></Header>
       <NowPlaying nowPlaying={nowPlaying}></NowPlaying>
+
+      <div className="flex justify-center gap-4 mt-4">
+        <button
+          onClick={HandlePrevButton}
+          disabled={currentPageNumber === 1}
+          className="px-4 py-2 bg-gray-500 text-white rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span>Page {currentPageNumber}</span>
+        <button
+          onClick={HandleNextButton}
+          className="px-4 py-2 bg-blue-500 text-white rounded"
+        >
+          Next
+        </button>
+      </div>
       {
-        selectedMoviesList.length > 0 ? (<SelectedMovies />) : (<UpcomingMovies upComingMovies={upComingMovies} selectedGenre={selectedGenre}></UpcomingMovies>)
+        searchValue && searchValue.length > 0 ?
+          (<SelectedMovies searchedMovieListInput={searchedMovieListInput} setSearchedMovieListInput={setSearchedMovieListInput} />) :
+          selectedMoviesList && selectedMoviesList.length > 0 ? <div>Genre list</div>
+            :
+            (<UpcomingMovies upComingMovies={upComingMovies} selectedGenre={selectedGenre}></UpcomingMovies>)
       }
 
     </div>

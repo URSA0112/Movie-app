@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { BASE_IMAGE_URL } from "../constants";
 import { Card, CardHeader, CardContent, CardDescription, CardFooter, CardTitle } from "@/components/ui/card";
 import { Movie } from "../page";
+import Link from "next/link";
 
 type UpcomingMoviesProps = {
     upComingMovies: Movie[];
@@ -17,13 +18,13 @@ export function UpcomingMovies({ upComingMovies, selectedGenre }: UpcomingMovies
 
     const HandleClickMovie = (each: { id: number, title: string }) => {
         const slug = generateSlug(each.title, each.id);
-        router.push(`/movieDetail/${slug}`);
     };
 
     return (
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-2 p-4 bg-slate-900">
             {upComingMovies?.map((each) => (
-                <Card key={each.id} className="w-[100%] h-auto cursor-pointer" onClick={() => HandleClickMovie(each)}>
+                <Link  key={each.id} href={`/movieDetail/${each.id}`}>
+                <Card className="w-[100%] h-auto cursor-pointer" onClick={() => HandleClickMovie(each)}>
                     <CardHeader>
                         <CardTitle>{each.title}</CardTitle>
                         <CardDescription></CardDescription>
@@ -34,7 +35,7 @@ export function UpcomingMovies({ upComingMovies, selectedGenre }: UpcomingMovies
                     <CardFooter>
                         <p>Card Footer</p>
                     </CardFooter>
-                </Card>
+                </Card></Link>
             ))}
         </div>
     );
